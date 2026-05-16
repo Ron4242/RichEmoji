@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RichEmoji", "RichEmoji\RichEmoji.csproj", "{4FDE04F7-0460-4769-87D2-81F6ADB1DCCB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4FDE04F7-0460-4769-87D2-81F6ADB1DCCB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FDE04F7-0460-4769-87D2-81F6ADB1DCCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FDE04F7-0460-4769-87D2-81F6ADB1DCCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FDE04F7-0460-4769-87D2-81F6ADB1DCCB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
