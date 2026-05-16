@@ -1,0 +1,90 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net48</TargetFramework>
+        <LangVersion>14</LangVersion>
+        <Deterministic>true</Deterministic>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+        <AssemblyName>RichEmoji</AssemblyName>
+        <RootNamespace>RichEmoji</RootNamespace>
+        <Authors>Ron4242</Authors>
+        <Title>RichEmoji</Title>
+        <Version>0.1.0</Version>
+        <GUID>$(Authors).github.$(Title)</GUID>
+        <Description>RichEmoji is a mod that enhances emojis all across Valheim, and even lets you add your own!</Description>
+        <Copyright>Copyright © $(Authors) 2026</Copyright>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ThunderstoreDependency Include="denikson-BepInExPack_Valheim-5.4.2333"/>
+    </ItemGroup>
+
+    <Choose>
+        <When Condition="($(OS) == 'Unix' OR $(OS) == 'OSX') AND $(GamePath) == ''">
+            <PropertyGroup>
+                <GamePath Condition="!Exists('$(GamePath)')">$(HOME)/.steam/steam/steamapps/common/Valheim</GamePath>
+                <GamePath Condition="!Exists('$(GamePath)')">$(HOME)/Library/Application Support/Steam/steamapps/common/Valheim/Contents/MacOS</GamePath>
+            </PropertyGroup>
+        </When>
+        <When Condition="($(OS) == 'Windows_NT') AND $(GamePath) == ''">
+            <PropertyGroup>
+                <GamePath Condition="!Exists('$(GamePath)')">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 892970', 'InstallLocation', null, RegistryView.Registry64, RegistryView.Registry32))</GamePath>
+                <_SteamLibraryPath>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\SOFTWARE\Valve\Steam', 'SteamPath', null, RegistryView.Registry32))</_SteamLibraryPath>
+                <GamePath Condition="!Exists('$(GamePath)') AND '$(_SteamLibraryPath)' != ''">$(_SteamLibraryPath)\steamapps\common\Valheim</GamePath>
+                <GamePath Condition="!Exists('$(GamePath)')">C:\Program Files\Steam\steamapps\common\Valheim</GamePath>
+                <GamePath Condition="!Exists('$(GamePath)')">C:\Program Files (x86)\Steam\steamapps\common\Valheim</GamePath>
+            </PropertyGroup>
+        </When>
+    </Choose>
+
+    <PropertyGroup>
+        <PluginOutputPath Condition="'$(PluginOutputPath)' == ''">$(GamePath)\BepInEx\plugins</PluginOutputPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2" PrivateAssets="all" ExcludeAssets="runtime"/>
+
+        <Reference Include="0Harmony" HintPath="$(GamePath)\BepInEx\core\0Harmony.dll" Private="false"/>
+        <Reference Include="BepInEx" HintPath="$(GamePath)\BepInEx\core\BepInEx.dll" Private="false"/>
+        <Reference Include="UnityEngine" HintPath="$(GamePath)\valheim_Data\Managed\UnityEngine.dll" Private="false"/>
+        <Reference Include="UnityEngine.CoreModule" HintPath="$(GamePath)\valheim_Data\Managed\UnityEngine.CoreModule.dll" Private="false"/>
+        <Reference Include="UnityEngine.UI" HintPath="$(GamePath)\valheim_Data\Managed\UnityEngine.UI.dll" Private="false"/>
+        <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(GamePath)\valheim_Data\Managed\UnityEngine.ImageConversionModule.dll" Private="false"/>
+        <Reference Include="UnityEngine.TextCoreFontEngineModule" HintPath="$(GamePath)\valheim_Data\Managed\UnityEngine.TextCoreFontEngineModule.dll" Private="false"/>
+        <Reference Include="Unity.TextMeshPro" HintPath="$(GamePath)\valheim_Data\Managed\Unity.TextMeshPro.dll" Publicize="true" Private="false"/>
+        <Reference Include="gui_framework" HintPath="$(GamePath)\valheim_Data\Managed\gui_framework.dll" Publicize="true" Private="false"/>
+
+        <Content Include="assets\emojis\**\*.png" Link="emojis\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
+
+    <Import Project="PluginInfo.targets"/>
+
+    <Target Name="CopyToGame" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+        <ItemGroup>
+            <OutputFiles Include="$(OutDir)**\*.*"/>
+        </ItemGroup>
+
+        <Copy SourceFiles="@(OutputFiles)"
+              DestinationFiles="@(OutputFiles->'$(PluginOutputPath)\$(Authors)-$(AssemblyName)\%(RecursiveDir)%(Filename)%(Extension)')"/>
+    </Target>
+
+    <Target Name="MakeThunderstorePackage" AfterTargets="Build" Condition="'$(Configuration)' == 'Release' AND ($(OS) == 'Windows_NT')">
+        <PropertyGroup>
+            <_Dependencies>@(ThunderstoreDependency, ',')</_Dependencies>
+            <_Cmd>powershell -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Package\Thunderstore\build.ps1&quot;</_Cmd>
+            <_Cmd>$(_Cmd) -Version $(Version)</_Cmd>
+            <_Cmd>$(_Cmd) -Author $(Authors)</_Cmd>
+            <_Cmd>$(_Cmd) -Title $(Title)</_Cmd>
+            <_Cmd>$(_Cmd) -Description &quot;$(Description)&quot;</_Cmd>
+            <_Cmd>$(_Cmd) -ProjectUrl &quot;$(ProjectUrl)&quot;</_Cmd>
+            <_Cmd>$(_Cmd) -OutDir &quot;$(OutDir.TrimEnd('\'))&quot;</_Cmd>
+            <_Cmd>$(_Cmd) -Dependencies &quot;$(_Dependencies)&quot;</_Cmd>
+        </PropertyGroup>
+        <Exec Command="$(_Cmd)"/>
+    </Target>
+</Project>
