@@ -128,7 +128,7 @@ public sealed class RichEmoji : BaseUnityPlugin
             string[] parts = fileName.Split(["__"], StringSplitOptions.None);
             string shortName = parts[0];
             StringBuilder sequence = new();
-            uint unicode = (uint)(0xE000 + i);
+            uint unicode = (uint)(0xE000 + i); // TODO: we need to avoid clashing with real unicodes.
 
             // TMP doesn't support multiple codepoints... but we want them!
             // since we know the real sequence, we can create a mapping for real:fake and control the glyph displayed.

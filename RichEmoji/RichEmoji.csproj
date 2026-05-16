@@ -9,9 +9,11 @@
         <RootNamespace>RichEmoji</RootNamespace>
         <Authors>Ron4242</Authors>
         <Title>RichEmoji</Title>
-        <Version>0.1.0</Version>
+        <ProjectUrl>https://github.com/Ron4242/RichEmoji</ProjectUrl>
+        <Version>0.1.1</Version>
         <GUID>$(Authors).github.$(Title)</GUID>
         <Description>RichEmoji is a mod that enhances emojis all across Valheim, and even lets you add your own!</Description>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Copyright>Copyright © $(Authors) 2026</Copyright>
     </PropertyGroup>
 
