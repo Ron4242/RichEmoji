@@ -10,7 +10,7 @@
 This is an early release.
 
 Please report any broken or malformed Unicode emojis (provided they're valid) to `ro_n` on Discord, and I'll get them
-fixed. The mod also adds a few seconds to startup with the current emoji pack.
+fixed.
 
 ## About
 
@@ -60,10 +60,9 @@ You can nest your emojis inside folders to keep them organized and easy to share
 
 Should be compatible with everything.
 
-- Multiplayer: This mod does not need to be on the server. Emojis are converted to their shortcodes, so what other
-  players see depends on their own emoji pack. If they have a matching shortcode, they'll see their own version of it (
-  e.g. :joy: can show up differently based on what that image is in their files).
-- Atlas size: The current maximum atlas size is 8192px. Weird things will probably happen if you have too many emojis.
+- Multiplayer: This mod does not need to installed on the server. Emojis are converted to their shortcodes, so what
+  other players see depends on their own emoji pack. If they have a matching shortcode, they'll see their own version of
+  it (e.g. :joy: can show up differently based on what that image is in their files).
 
 See the changelog for planned features.
 

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -16,6 +17,10 @@ namespace RichEmoji;
 [BepInPlugin(ThisPluginInfo.PLUGIN_GUID, ThisPluginInfo.PLUGIN_NAME, ThisPluginInfo.PLUGIN_VERSION)]
 public sealed class RichEmoji : BaseUnityPlugin
 {
+    // since our PUA only spans 6400 characters, we'll limit to 6400 emojis
+    // we use the U+E000-U+F8FF PUA
+    // nobody sane would exceed this?.
+    public const int MaxEmojis = 6400;
     public static readonly ManualLogSource Log = BepInEx.Logging.Logger.CreateLogSource(ThisPluginInfo.PLUGIN_NAME);
     public static TMP_SpriteAsset CustomEmojiAsset;
 
@@ -45,22 +50,32 @@ public sealed class RichEmoji : BaseUnityPlugin
         }
 
         string[] files = Directory.GetFiles(emojisFolder, "*.png", SearchOption.AllDirectories);
-        if (files.Length == 0) return; // got no mojis
+        int totalFiles = files.Length;
+        if (files.Length == 0)
+            return; // got no mojis
 
-        List<Texture2D> individualTextures = [];
-        List<string> fileNames = [];
+        // loading hundreds of individual pngs is very, very IO bound, so we'll parallelize it
+        byte[][] bytes = new byte[totalFiles][];
+        Parallel.For(0, totalFiles, i => { bytes[i] = File.ReadAllBytes(files[i]); });
 
-        // collect images
-        foreach (string file in files)
+        List<Texture2D> individualTextures = new List<Texture2D>(totalFiles);
+        List<string> fileNames = new List<string>(totalFiles);
+
+        // collect textures (resize to maximum of 96x96 so we never overflow our atlas with the max emoji count)
+        for (int i = 0; i < totalFiles; i++)
         {
-            byte[] fileData = File.ReadAllBytes(file);
-            Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            LoadImageMethod.Invoke(null, [tex, fileData]);
-            individualTextures.Add(tex);
-            fileNames.Add(Path.GetFileNameWithoutExtension(file));
+            Texture2D rawTex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            LoadImageMethod.Invoke(null, [rawTex, bytes[i]]);
+            bytes[i] = null;
+
+            Texture2D resizedTex = ResizeTexture(rawTex, 96, 96);
+            individualTextures.Add(resizedTex);
+            fileNames.Add(Path.GetFileNameWithoutExtension(files[i]));
+
+            if (resizedTex != rawTex)
+                Destroy(rawTex);
         }
 
-        // TODO: this max atlas size probably isn't enough
         Texture2D atlas = new Texture2D(2, 2, TextureFormat.RGBA32, false);
         Rect[] rects = atlas.PackTextures(individualTextures.ToArray(), 2, 8192);
 
@@ -86,8 +101,15 @@ public sealed class RichEmoji : BaseUnityPlugin
         CustomEmojiAsset.spriteCharacterTable = [];
         CustomEmojiAsset.spriteGlyphTable = [];
 
-        // theoretically supports variable length emojis
-        for (int i = 0; i < rects.Length; i++)
+        int limit = Math.Min(rects.Length, MaxEmojis);
+        if (rects.Length > MaxEmojis)
+        {
+            Log.LogWarning(
+                $"Emoji limit exceeded! Found {rects.Length}, but only up to {MaxEmojis} emojis are supported. Not all emojis will be loaded.");
+        }
+
+        // theoretically supports variable size emojis
+        for (int i = 0; i < limit; i++)
         {
             Rect r = rects[i];
             string fileName = fileNames[i];
@@ -110,7 +132,7 @@ public sealed class RichEmoji : BaseUnityPlugin
             string[] parts = fileName.Split(["__"], StringSplitOptions.None);
             string shortName = parts[0];
             StringBuilder sequence = new();
-            uint unicode = (uint)(0xE000 + i); // TODO: we need to avoid clashing with real unicodes.
+            uint unicode = (uint)(0xE000 + i);
 
             // TMP doesn't support multiple codepoints... but we want them!
             // since we know the real sequence, we can create a mapping for real:fake and control the glyph displayed.
@@ -150,5 +172,45 @@ public sealed class RichEmoji : BaseUnityPlugin
         defaultAsset.fallbackSpriteAssets.Add(CustomEmojiAsset);
 
         Log.LogInfo($"Loaded {files.Length} emojis!");
+    }
+
+    private static Texture2D ResizeTexture(Texture2D source, int maxWidth, int maxHeight)
+    {
+        int targetWidth = source.width;
+        int targetHeight = source.height;
+
+        // preserve aspect
+        if (targetWidth > maxWidth || targetHeight > maxHeight)
+        {
+            float aspect = (float)targetWidth / targetHeight;
+            if (targetWidth > targetHeight)
+            {
+                targetWidth = maxWidth;
+                targetHeight = Mathf.RoundToInt(targetWidth / aspect);
+            }
+            else
+            {
+                targetHeight = maxHeight;
+                targetWidth = Mathf.RoundToInt(targetHeight * aspect);
+            }
+        }
+        else
+        {
+            return source;
+        }
+
+        RenderTexture rt = RenderTexture.GetTemporary(targetWidth, targetHeight, 0, RenderTextureFormat.ARGB32,
+            RenderTextureReadWrite.Default);
+        RenderTexture.active = rt;
+        Graphics.Blit(source, rt);
+
+        Texture2D result = new Texture2D(targetWidth, targetHeight, TextureFormat.RGBA32, false);
+        result.ReadPixels(new Rect(0, 0, targetWidth, targetHeight), 0, 0);
+        result.Apply();
+
+        RenderTexture.active = null;
+        RenderTexture.ReleaseTemporary(rt);
+
+        return result;
     }
 }

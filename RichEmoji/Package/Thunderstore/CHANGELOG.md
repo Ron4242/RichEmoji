@@ -12,6 +12,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multiplayer emoji pack syncing (?)
 - GIF support (?)
 
+## [0.3.0] - 2026-05-17
+
+### Added
+
+- Emojis are now resized to a maximum of 96x96 (respects aspect ratio)
+- 6400 emoji limit
+
+### Changes
+
+- Emojis are now loaded in parallel, improving their load time by an order of magnitude
+
+### Fixes
+
+- Emojis should no longer clash with other Unicode sequences
+
 ## [0.2.1] - 2026-05-17
 
 ### Added
