@@ -10,7 +10,7 @@
         <Authors>Ron4242</Authors>
         <Title>RichEmoji</Title>
         <ProjectUrl>https://github.com/Ron4242/RichEmoji</ProjectUrl>
-        <Version>0.2.0</Version>
+        <Version>0.2.1</Version>
         <GUID>$(Authors).github.$(Title)</GUID>
         <Description>Enhances emojis all across Valheim, adds new ones, and even lets you add your own!</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>

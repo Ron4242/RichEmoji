@@ -62,7 +62,7 @@ public static class Patches
     {
         static void Prefix(GuiInputField __instance, ref string text)
         {
-            string canonical = RichEmoji.EncodeToShortcodes(text);
+            string canonical = EmojiConverter.ToShortcodes(text);
             if (canonical == text) return;
             __instance.SetTextWithoutNotify(canonical);
             text = canonical;
@@ -75,7 +75,7 @@ public static class Patches
     {
         static void Postfix(TextMeshProUGUI __instance)
         {
-            __instance.textPreprocessor ??= new EmojiConverter.EmojiTextPreprocessor();
+            __instance.textPreprocessor ??= EmojiConverter.EmojiTextPreprocessor.Instance;
         }
     }
 }

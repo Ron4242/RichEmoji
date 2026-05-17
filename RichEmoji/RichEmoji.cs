@@ -151,18 +151,4 @@ public sealed class RichEmoji : BaseUnityPlugin
 
         Log.LogInfo($"Loaded {files.Length} emojis!");
     }
-
-    public static string EncodeToShortcodes(string text)
-    {
-        StringBuilder sb = new();
-        foreach (char c in text)
-        {
-            if (EmojiFakeUnicodeLookup.TryGetValue(c, out string shortcode))
-                sb.Append(shortcode);
-            else
-                sb.Append(c);
-        }
-
-        return sb.ToString();
-    }
 }

@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multiplayer emoji pack syncing (?)
 - GIF support (?)
 
+## [0.2.1] - 2026-05-17
+
+### Added
+
+- Thunderstore "Usage" wiki page
+
+### Changed
+
+- Shortened package README
+
 ## [0.2.0] - 2026-05-17
 
 ### Added

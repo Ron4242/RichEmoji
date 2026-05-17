@@ -35,18 +35,9 @@ Type a shortcode matching your emoji's filename and it'll be replaced with the m
 :thumbsup: -> thumbsup.png
 ```
 
-You can also directly paste the emoji if it has a Unicode mapped to it.
-
-### File naming
-
-| Emoji Type                              | Filename format                |
-|-----------------------------------------|--------------------------------|
-| Basic :custom_emoji:                    | `wave.png`                     |
-| With Unicode mapping                    | `wave__1F44B.png`              |
-| Multi-codepoint (e.g. flags, skin tone) | `wave_medium__1F44B-1F3FD.png` |
-
-The `__` (double underscore) separator followed by hex codepoints lets RichEmoji map pasted Unicode to your custom
-glyphs. Codepoints are separated by `-` (hyphen). Check the included emojis for more examples.
+You can also directly paste the emoji if it has a Unicode mapped to it. For more info, like how to add your own emojis
+or support Unicode mapping, check
+the [usage wiki](https://thunderstore.io/c/valheim/p/Ron4242/RichEmoji/wiki/5229-usage/)!
 
 ---
 
