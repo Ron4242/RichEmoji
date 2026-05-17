@@ -40,7 +40,7 @@ $manifest = @{
     })
 } | ConvertTo-Json
 
-$manifest | Out-File -FilePath "$PackageDir\manifest.json" -Encoding utf8
+[System.IO.File]::WriteAllText("$PackageDir\manifest.json", $manifest, [System.Text.Encoding]::UTF8)
 
 Compress-Archive -Path "$PackageDir\*" -DestinationPath $ZipPath
 Remove-Item -Recurse -Force $PackageDir

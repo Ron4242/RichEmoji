@@ -7,9 +7,9 @@
 
 ### ❗ Disclaimer ❗
 
-This is an initial client-side release and may contain a few bugs, like some emojis with multiple codepoints not showing
-up properly.
-Please report any broken or malformed Unicode emojis (provided they're valid) to `ro_n` on Discord and I'll get them
+This is an early release.
+
+Please report any broken or malformed Unicode emojis (provided they're valid) to `ro_n` on Discord, and I'll get them
 fixed. The mod also adds a few seconds to startup with the current emoji pack.
 
 ## About
@@ -17,6 +17,7 @@ fixed. The mod also adds a few seconds to startup with the current emoji pack.
 All the emojis you ~~never asked for~~ could ever ask for, now in Valheim!
 
 - Custom emoji support - add your own PNG files and use them in Valheim as emojis (see below)
+- Multiplayer compatible - other players with the mod will see your emojis, everyone else sees shortcodes
 - Discord-style shortcodes - type `:wave:` and it becomes 👋
 - Paste support - optionally copy and paste Unicode emojis from the web / emoji picker
 - Twemoji - Includes Twitter emojis (you can add your own, too) so you'll have plenty to start (~1900 emojis)
@@ -68,16 +69,12 @@ You can nest your emojis inside folders to keep them organized and easy to share
 
 Should be compatible with everything.
 
-- Multiplayer: This mod is currently client-side only. Players without the mod will see raw text (unrecognized
-  characters) or shortcodes.
+- Multiplayer: This mod does not need to be on the server. Emojis are converted to their shortcodes, so what other
+  players see depends on their own emoji pack. If they have a matching shortcode, they'll see their own version of it (
+  e.g. :joy: can show up differently based on what that image is in their files).
 - Atlas size: The current maximum atlas size is 8192px. Weird things will probably happen if you have too many emojis.
 
-## Planned Features
-
-- Autocomplete dropdown for shortcode input (!!!)
-- Multiplayer emoji syncing (?)
-- GIF support (!?!?)
-- Probably some configuration (??)
+See the changelog for planned features.
 
 ---
 
@@ -86,8 +83,9 @@ Should be compatible with everything.
 [![Discord](https://img.shields.io/badge/Discord-Valheim_Modding-discord?logo=discord&color=%235865F2&style=flat-square)](https://discord.gg/ktFvZ8ET)
 [![Discord](https://img.shields.io/badge/Discord-Jotunn_Valheim-discord?logo=discord&color=%235865F2&style=flat-square)](https://discord.gg/kWyQcMwd)
 
-If you have a bug, suggestion, or even something nice to say, shoot me a DM or mention on Discord! You can find me on
-the above Discord servers (**they are not mine!**)
+If you have a bug, suggestion, issues using or installing the mod, or even something nice to say, shoot me a DM or
+mention on Discord! You can find me on
+the above Discord servers (**they are not mine**)
 
 ---
 

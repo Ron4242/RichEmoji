@@ -1,14 +1,11 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using BepInEx;
 using BepInEx.Logging;
-using GUIFramework;
 using HarmonyLib;
 using TMPro;
 using UnityEngine;
@@ -19,29 +16,14 @@ namespace RichEmoji;
 [BepInPlugin(ThisPluginInfo.PLUGIN_GUID, ThisPluginInfo.PLUGIN_NAME, ThisPluginInfo.PLUGIN_VERSION)]
 public sealed class RichEmoji : BaseUnityPlugin
 {
-    private const string BaseEmoji =
-        "(?:" +
-        @"(?:\uD83C[\uDDE6-\uDDFF]){2}|" +
-        @"[\uD83C-\uD83F][\uDC00-\uDFFF]|" +
-        @"[\u2000-\u3299]|" +
-        @"[\u00A9\u00AE]|" +
-        @"[0-9#*]\uFE0F?\u20E3" +
-        ")" +
-        @"(?:\uD83C[\uDFFB-\uDFFF])?\uFE0F?";
-
     public static readonly ManualLogSource Log = BepInEx.Logging.Logger.CreateLogSource(ThisPluginInfo.PLUGIN_NAME);
     public static TMP_SpriteAsset CustomEmojiAsset;
 
     public static readonly Dictionary<string, string> EmojiNameLookup = new();
+    public static readonly Dictionary<char, string> EmojiFakeUnicodeLookup = new();
     public static readonly Dictionary<string, string> EmojiUnicodeLookup = new();
-    public static readonly Regex EmojiNamePattern = new(":([a-zA-Z0-9_]+):", RegexOptions.Compiled);
 
-    public static readonly Regex EmojiUnicodePattern = new(
-        BaseEmoji + @"(?:\u200D" + BaseEmoji + ")*",
-        RegexOptions.Compiled
-    );
-
-    // LoadImage fix from https://github.com/Valheim-Modding/Jotunn/blob/dev/JotunnLib/Utils/AssetUtils.cs
+    // LoadImage fix from Jotunn AssetUtils
     private static MethodInfo LoadImageMethod { get; } = AccessTools.Method(typeof(ImageConversion),
         nameof(ImageConversion.LoadImage), [typeof(Texture2D), typeof(byte[])]);
 
@@ -159,6 +141,7 @@ public sealed class RichEmoji : BaseUnityPlugin
             CustomEmojiAsset.spriteCharacterTable.Add(character);
 
             EmojiNameLookup[shortName] = char.ConvertFromUtf32((int)unicode);
+            EmojiFakeUnicodeLookup[char.ConvertFromUtf32((int)unicode)[0]] = $":{shortName}:";
         }
 
         CustomEmojiAsset.UpdateLookupTables();
@@ -169,71 +152,17 @@ public sealed class RichEmoji : BaseUnityPlugin
         Log.LogInfo($"Loaded {files.Length} emojis!");
     }
 
-    public static IEnumerator After(YieldInstruction wait, Action action)
+    public static string EncodeToShortcodes(string text)
     {
-        yield return wait;
-        action();
-    }
-
-    public class EmojiTextPreprocessor : ITextPreprocessor
-    {
-        public static readonly EmojiTextPreprocessor Instance = new();
-
-        public string PreprocessText(string text)
+        StringBuilder sb = new();
+        foreach (char c in text)
         {
-            if (string.IsNullOrEmpty(text)) return text;
-
-            string processedText = text;
-
-            // replace :short_name:
-            if (processedText.Contains(":"))
-            {
-                processedText = EmojiNamePattern.Replace(processedText, match =>
-                    EmojiNameLookup.TryGetValue(match.Groups[1].Value, out string unicodeStr)
-                        ? unicodeStr
-                        : match.Value);
-            }
-
-            // replace unicode sequences (like those copy pasted)
-            processedText = EmojiUnicodePattern.Replace(processedText, match =>
-                EmojiUnicodeLookup.TryGetValue(match.Value, out string fakeUnicode) ? fakeUnicode : match.Value);
-
-            return processedText;
+            if (EmojiFakeUnicodeLookup.TryGetValue(c, out string shortcode))
+                sb.Append(shortcode);
+            else
+                sb.Append(c);
         }
-    }
 
-    [HarmonyPatch(typeof(GuiInputField), "Awake")]
-    public static class GuiInputFieldAwakePatch
-    {
-        static void Postfix(GuiInputField __instance)
-        {
-            Coroutine pending = null;
-
-            __instance.onValueChanged.AddListener(text =>
-            {
-                if (pending != null)
-                    __instance.StopCoroutine(pending);
-
-                string captured = text;
-                pending = __instance.StartCoroutine(
-                    After(null, () =>
-                    {
-                        pending = null;
-                        string newText = EmojiTextPreprocessor.Instance.PreprocessText(captured);
-                        if (newText == captured) return;
-                        __instance.SetTextWithoutNotify(newText);
-                        __instance.caretPosition = __instance.text.Length;
-                    }));
-            });
-        }
-    }
-
-    [HarmonyPatch(typeof(TextMeshProUGUI), "Awake")]
-    public static class TMPTextAwakePatch
-    {
-        static void Postfix(TextMeshProUGUI __instance)
-        {
-            __instance.textPreprocessor ??= new EmojiTextPreprocessor();
-        }
+        return sb.ToString();
     }
 }
