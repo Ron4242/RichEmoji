@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Multiplayer emoji pack syncing (?)
 - GIF support (?)
 
+## [0.3.1] - 2026-05-17
+
+### Fixed
+
+- Fixed flag shortcodes not converting properly
+
 ## [0.3.0] - 2026-05-17
 
 ### Added

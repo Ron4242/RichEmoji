@@ -16,7 +16,7 @@ public static class EmojiConverter
         ")" +
         @"(?:\uD83C[\uDFFB-\uDFFF])?\uFE0F?";
 
-    public static readonly Regex EmojiNamePattern = new(":([a-zA-Z0-9_]+):", RegexOptions.Compiled);
+    public static readonly Regex EmojiNamePattern = new(":([a-zA-Z0-9-_]+):", RegexOptions.Compiled);
 
     public static readonly Regex EmojiUnicodePattern = new(
         BaseEmoji + @"(?:\u200D" + BaseEmoji + ")*",
