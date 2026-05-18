@@ -9,8 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Autocomplete dropdown for shortcode input (!)
 - Configuration
+- Automatically add additional emojis based on item stack icons (?)
 - Multiplayer emoji pack syncing (?)
 - GIF support (?)
+
+## [0.4.0] - 2026-05-18
+
+### Changed
+
+- Lowered texture size to 64x64 to use a bit less memory (should still look fine)
 
 ## [0.3.1] - 2026-05-17
 

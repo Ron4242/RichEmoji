@@ -21,7 +21,6 @@ public static class Patches
 
             __instance.SetTextWithoutNotify(converted);
             __instance.m_OriginalText = converted;
-            __instance.caretPosition = __instance.text.Length;
         }
     }
 
@@ -49,7 +48,6 @@ public static class Patches
                     if (newText != captured)
                     {
                         __instance.SetTextWithoutNotify(newText);
-                        __instance.caretPosition = __instance.text.Length;
                     }
                 }
             });

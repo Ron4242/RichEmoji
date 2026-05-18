@@ -21,6 +21,8 @@ public sealed class RichEmoji : BaseUnityPlugin
     // we use the U+E000-U+F8FF PUA
     // nobody sane would exceed this?.
     public const int MaxEmojis = 6400;
+    public const int EmojiMaxWidth = 64;
+    public const int EmojiMaxHeight = 64;
     public static readonly ManualLogSource Log = BepInEx.Logging.Logger.CreateLogSource(ThisPluginInfo.PLUGIN_NAME);
     public static TMP_SpriteAsset CustomEmojiAsset;
 
@@ -34,7 +36,7 @@ public sealed class RichEmoji : BaseUnityPlugin
 
     void Awake()
     {
-        Harmony.CreateAndPatchAll(typeof(RichEmoji).Assembly);
+        Harmony.CreateAndPatchAll(typeof(Patches).Assembly);
         LoadEmojis();
     }
 
@@ -68,7 +70,7 @@ public sealed class RichEmoji : BaseUnityPlugin
             LoadImageMethod.Invoke(null, [rawTex, bytes[i]]);
             bytes[i] = null;
 
-            Texture2D resizedTex = ResizeTexture(rawTex, 96, 96);
+            Texture2D resizedTex = ResizeTexture(rawTex, EmojiMaxWidth, EmojiMaxHeight);
             individualTextures.Add(resizedTex);
             fileNames.Add(Path.GetFileNameWithoutExtension(files[i]));
 
@@ -77,7 +79,7 @@ public sealed class RichEmoji : BaseUnityPlugin
         }
 
         Texture2D atlas = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-        Rect[] rects = atlas.PackTextures(individualTextures.ToArray(), 2, 8192);
+        Rect[] rects = atlas.PackTextures(individualTextures.ToArray(), 2, 8192, true);
 
         // don't need these anymore
         foreach (var tex in individualTextures)
