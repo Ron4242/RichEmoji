@@ -64,10 +64,6 @@
         <Content Include="assets\emojis\**\*.png" Link="emojis\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <Folder Include="assets\emojis\"/>
-    </ItemGroup>
-
     <Import Project="PluginInfo.targets"/>
 
     <Target Name="CopyToGame" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">

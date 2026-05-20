@@ -12,11 +12,11 @@ public static class Patches
     [HarmonyPatch(typeof(GuiInputField), "ActivateInputField")]
     public static class GuiInputFieldActivatePatch
     {
-        static void Postfix(GuiInputField __instance)
+        private static void Postfix(GuiInputField __instance)
         {
             if (string.IsNullOrEmpty(__instance.text)) return;
 
-            string converted = EmojiConverter.ToFakeUnicode(__instance.text);
+            var converted = EmojiConverter.ToFakeUnicode(__instance.text);
             if (converted == __instance.text) return;
 
             __instance.SetTextWithoutNotify(converted);
@@ -28,7 +28,7 @@ public static class Patches
     [HarmonyPatch(typeof(GuiInputField), "Awake")]
     public static class GuiInputFieldAwakePatch
     {
-        static void Postfix(GuiInputField __instance)
+        private static void Postfix(GuiInputField __instance)
         {
             Coroutine pending = null;
 
@@ -37,18 +37,15 @@ public static class Patches
                 if (pending != null)
                     __instance.StopCoroutine(pending);
 
-                string captured = text;
+                var captured = text;
                 pending = __instance.StartCoroutine(Routine());
 
                 IEnumerator Routine()
                 {
                     yield return null;
                     pending = null;
-                    string newText = EmojiConverter.ToFakeUnicode(captured);
-                    if (newText != captured)
-                    {
-                        __instance.SetTextWithoutNotify(newText);
-                    }
+                    var newText = EmojiConverter.ToFakeUnicode(captured);
+                    if (newText != captured) __instance.SetTextWithoutNotify(newText);
                 }
             });
         }
@@ -58,9 +55,9 @@ public static class Patches
     [HarmonyPatch(typeof(GuiInputField), "onInputSubmit")]
     public static class GuiInputFieldSubmitPatch
     {
-        static void Prefix(GuiInputField __instance, ref string text)
+        private static void Prefix(GuiInputField __instance, ref string text)
         {
-            string canonical = EmojiConverter.ToShortcodes(text);
+            var canonical = EmojiConverter.ToShortcodes(text);
             if (canonical == text) return;
             __instance.SetTextWithoutNotify(canonical);
             text = canonical;
@@ -71,7 +68,7 @@ public static class Patches
     [HarmonyPatch(typeof(TextMeshProUGUI), "Awake")]
     public static class TMPTextAwakePatch
     {
-        static void Postfix(TextMeshProUGUI __instance)
+        private static void Postfix(TextMeshProUGUI __instance)
         {
             __instance.textPreprocessor ??= EmojiConverter.EmojiTextPreprocessor.Instance;
         }

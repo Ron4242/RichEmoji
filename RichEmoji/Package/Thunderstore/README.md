@@ -46,12 +46,12 @@ the [usage wiki](https://thunderstore.io/c/valheim/p/Ron4242/RichEmoji/wiki/5229
 1. Make sure you have the [BepInEx Valheim Pack](https://thunderstore.io/c/valheim/p/denikson/BepInExPack_Valheim/)
    dependency
 2. Install
-   via [Thunderstore Mod Manager](https://www.overwolf.com/app/Thunderstore-Thunderstore_Mod_Manager), [r2modman](https://thunderstore.io/c/valheim/p/ebkr/r2modman/) (
-   recommended) or manually
-   - For manual install, extract the archive to `BepInEx/plugins/`
-3. Drop your emoji PNGs into the `emojis/` folder inside the plugin directory:
+   via [Thunderstore Mod Manager](https://www.overwolf.com/app/Thunderstore-Thunderstore_Mod_Manager), [r2modman](https://thunderstore.io/c/valheim/p/ebkr/r2modman/), [Gale](https://thunderstore.io/c/valheim/p/Kesomannen/GaleModManager/)
+   or manually
+    - For manual install, extract the archive to `BepInEx/plugins/`
+3. Drop your emoji PNGs into the `emojis/` folder inside the RichEmoji config directory:
    ```
-   BepInEx/plugins/RichEmoji/emojis/yourEmojiHere.png
+   BepInEx/config/RichEmoji/emojis/yourEmojiHere.png
    ```
 
 You can nest your emojis inside folders to keep them organized and easy to share.

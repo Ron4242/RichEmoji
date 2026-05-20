@@ -28,18 +28,16 @@ public static class EmojiConverter
     {
         if (string.IsNullOrEmpty(text)) return text;
 
-        string result = text;
+        var result = text;
 
         if (result.Contains(":"))
-        {
             result = EmojiNamePattern.Replace(result, match =>
-                RichEmoji.EmojiNameLookup.TryGetValue(match.Groups[1].Value, out string unicodeStr)
+                RichEmoji.EmojiNameLookup.TryGetValue(match.Groups[1].Value, out var unicodeStr)
                     ? unicodeStr
                     : match.Value);
-        }
 
         result = EmojiUnicodePattern.Replace(result, match =>
-            RichEmoji.EmojiUnicodeLookup.TryGetValue(match.Value, out string fakeUnicode)
+            RichEmoji.EmojiUnicodeLookup.TryGetValue(match.Value, out var fakeUnicode)
                 ? fakeUnicode
                 : match.Value);
 
@@ -52,13 +50,11 @@ public static class EmojiConverter
         if (string.IsNullOrEmpty(text)) return text;
 
         StringBuilder sb = new();
-        foreach (char c in text)
-        {
-            if (RichEmoji.EmojiFakeUnicodeLookup.TryGetValue(c, out string shortcode))
+        foreach (var c in text)
+            if (RichEmoji.EmojiFakeUnicodeLookup.TryGetValue(c, out var shortcode))
                 sb.Append(shortcode);
             else
                 sb.Append(c);
-        }
 
         return sb.ToString();
     }
@@ -67,6 +63,9 @@ public static class EmojiConverter
     {
         public static readonly EmojiTextPreprocessor Instance = new();
 
-        public string PreprocessText(string text) => ToFakeUnicode(text);
+        public string PreprocessText(string text)
+        {
+            return ToFakeUnicode(text);
+        }
     }
 }

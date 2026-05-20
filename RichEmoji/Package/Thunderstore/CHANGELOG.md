@@ -15,9 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.4.0] - 2026-05-18
 
+❗Move existing custom emojis (only ones you've added) to `BepInEx/config/RichEmoji/emojis`, as mod manager updates will
+currently wipe them
+
 ### Changed
 
 - Lowered texture size to 64x64 to use a bit less memory (should still look fine)
+- Custom emojis are now stored in the config folder (oops)
+- Cleaned up a lot of code internally
 
 ## [0.3.1] - 2026-05-17
 
