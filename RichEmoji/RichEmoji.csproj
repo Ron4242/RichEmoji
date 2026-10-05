@@ -10,7 +10,7 @@
         <Authors>Ron4242</Authors>
         <Title>RichEmoji</Title>
         <ProjectUrl>https://github.com/Ron4242/RichEmoji</ProjectUrl>
-        <Version>0.4.0</Version>
+        <Version>1.0.0</Version>
         <GUID>$(Authors).github.$(Title)</GUID>
         <Description>Enhances emojis all across Valheim, adds new ones, and even lets you add your own!</Description>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -23,7 +23,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ThunderstoreDependency Include="denikson-BepInExPack_Valheim-5.4.2333"/>
+        <ThunderstoreDependency Include="denikson-BepInExPack_Valheim-5.4.2351"/>
     </ItemGroup>
 
     <Choose>
@@ -56,9 +56,13 @@
         <Reference Include="UnityEngine" HintPath="$(GamePath)\valheim_Data\Managed\UnityEngine.dll" Private="false"/>
         <Reference Include="UnityEngine.CoreModule" HintPath="$(GamePath)\valheim_Data\Managed\UnityEngine.CoreModule.dll" Private="false"/>
         <Reference Include="UnityEngine.UI" HintPath="$(GamePath)\valheim_Data\Managed\UnityEngine.UI.dll" Private="false"/>
+        <Reference Include="UnityEngine.UIModule" HintPath="$(GamePath)\valheim_Data\Managed\UnityEngine.UIModule.dll" Private="false"/>
+        <Reference Include="UnityEngine.IMGUIModule" HintPath="$(GamePath)\valheim_Data\Managed\UnityEngine.IMGUIModule.dll" Private="false"/>
         <Reference Include="UnityEngine.ImageConversionModule" HintPath="$(GamePath)\valheim_Data\Managed\UnityEngine.ImageConversionModule.dll" Private="false"/>
         <Reference Include="UnityEngine.TextCoreFontEngineModule" HintPath="$(GamePath)\valheim_Data\Managed\UnityEngine.TextCoreFontEngineModule.dll" Private="false"/>
         <Reference Include="Unity.TextMeshPro" HintPath="$(GamePath)\valheim_Data\Managed\Unity.TextMeshPro.dll" Publicize="true" Private="false"/>
+        <Reference Include="assembly_utils" HintPath="$(GamePath)\valheim_Data\Managed\assembly_utils.dll" Private="false"/>
+        <Reference Include="assembly_valheim" HintPath="$(GamePath)\valheim_Data\Managed\assembly_valheim.dll" Private="false"/>
         <Reference Include="gui_framework" HintPath="$(GamePath)\valheim_Data\Managed\gui_framework.dll" Publicize="true" Private="false"/>
 
         <Content Include="assets\emojis\**\*.png" Link="emojis\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest"/>
@@ -75,11 +79,14 @@
               DestinationFiles="@(OutputFiles->'$(PluginOutputPath)\$(Authors)-$(AssemblyName)\%(RecursiveDir)%(Filename)%(Extension)')"/>
     </Target>
 
-    <Target Name="MakeThunderstorePackage" AfterTargets="Build" Condition="'$(Configuration)' == 'Release' AND ($(OS) == 'Windows_NT')">
+    <ItemGroup>
+        <PackagePlatform Include="Thunderstore;Hexium;Nexus"/>
+    </ItemGroup>
+
+    <Target Name="MakePackages" AfterTargets="Build" Condition="'$(Configuration)' == 'Release' AND ($(OS) == 'Windows_NT')">
         <PropertyGroup>
             <_Dependencies>@(ThunderstoreDependency, ',')</_Dependencies>
-            <_Cmd>powershell -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Package\Thunderstore\build.ps1&quot;</_Cmd>
-            <_Cmd>$(_Cmd) -Version $(Version)</_Cmd>
+            <_Cmd>-Version $(Version)</_Cmd>
             <_Cmd>$(_Cmd) -Author $(Authors)</_Cmd>
             <_Cmd>$(_Cmd) -Title $(Title)</_Cmd>
             <_Cmd>$(_Cmd) -Description &quot;$(Description)&quot;</_Cmd>
@@ -87,6 +94,6 @@
             <_Cmd>$(_Cmd) -OutDir &quot;$(OutDir.TrimEnd('\'))&quot;</_Cmd>
             <_Cmd>$(_Cmd) -Dependencies &quot;$(_Dependencies)&quot;</_Cmd>
         </PropertyGroup>
-        <Exec Command="$(_Cmd)"/>
+        <Exec Command="powershell -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Package\%(PackagePlatform.Identity)\build.ps1&quot; $(_Cmd)"/>
     </Target>
 </Project>

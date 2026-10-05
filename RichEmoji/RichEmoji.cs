@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using TMPro;
@@ -19,12 +20,13 @@ public sealed class RichEmoji : BaseUnityPlugin
 {
     // since our PUA only spans 6400 characters, we'll limit to 6400 emojis
     // we use the U+E000-U+F8FF PUA
-    // nobody sane would exceed this?.
+    // nobody sane would exceed this?
     private const int MaxEmojis = 6400;
     private const int EmojiMaxWidth = 64;
     private const int EmojiMaxHeight = 64;
     public static readonly ManualLogSource Log = BepInEx.Logging.Logger.CreateLogSource(ThisPluginInfo.PLUGIN_NAME);
     public static TMP_SpriteAsset CustomEmojiAsset;
+    public static ConfigEntry<bool> AutocompleteEnabled;
 
     private static readonly List<(Texture2D texture, string emojiName, string unicode)> PendingEmojis = new();
     public static readonly Dictionary<string, string> EmojiNameLookup = new();
@@ -37,44 +39,87 @@ public sealed class RichEmoji : BaseUnityPlugin
 
     private void Awake()
     {
+        AutocompleteEnabled = Config.Bind(
+            "General",
+            "Autocomplete",
+            true,
+            "Show a list of matching emojis while typing a shortcode (e.g. :wa)"
+        );
+
         Harmony.CreateAndPatchAll(typeof(Patches).Assembly);
         LoadEmojis();
     }
 
-    private void LoadEmojis()
+    private void Start()
     {
-        var pluginFolder = Path.GetDirectoryName(Info.Location);
-        var baseEmojiFolder = Path.Combine(pluginFolder, "emojis");
-        var configFolder = Path.Combine(
-            Paths.ConfigPath,
-            ThisPluginInfo.PLUGIN_NAME,
-            "emojis"
-        );
-        Directory.CreateDirectory(configFolder);
-
-        AddEmojis(baseEmojiFolder);
-        AddEmojis(configFolder);
-
         BuildEmojis();
     }
 
-    public static void AddEmojis(string folder)
+    private void LoadEmojis()
+    {
+        var bundledFolder = Path.Combine(Path.GetDirectoryName(Info.Location)!, "emojis");
+        var emojiFolder = Path.Combine(Paths.ConfigPath, ThisPluginInfo.PLUGIN_NAME, "emojis");
+
+        // the config folder is the user's from the first install onwards, we never write to it again.
+        // deleting it restores the bundled emojis on next launch
+        if (!Directory.Exists(emojiFolder))
+            SeedEmojiFolder(bundledFolder, emojiFolder);
+
+        // loose files directly in emojis/ are treated as custom, each subfolder as its own pack
+        var custom = AddEmojiFiles(Directory.GetFiles(emojiFolder, "*.png", SearchOption.TopDirectoryOnly));
+        if (custom > 0)
+            Log.LogInfo($"Loaded {custom} custom emojis");
+
+        var packs = Directory.GetDirectories(emojiFolder);
+        Array.Sort(packs, StringComparer.OrdinalIgnoreCase);
+        foreach (var pack in packs)
+        {
+            var count = AddEmojis(pack);
+            if (count > 0)
+                Log.LogInfo($"Loaded {count} emojis from {Path.GetFileName(pack)}");
+        }
+    }
+
+    private static void SeedEmojiFolder(string source, string destination)
+    {
+        Directory.CreateDirectory(destination);
+        if (!Directory.Exists(source))
+            return;
+
+        var copied = 0;
+        foreach (var file in Directory.GetFiles(source, "*", SearchOption.AllDirectories))
+        {
+            var target = Path.Combine(destination,
+                file.Substring(source.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            File.Copy(file, target, false);
+            copied++;
+        }
+
+        Log.LogInfo($"First launch: copied {copied} bundled emoji files to {destination}");
+    }
+
+    // returns the number of emojis queued from the folder, recursive
+    public static int AddEmojis(string folder)
     {
         if (!Directory.Exists(folder))
-            return;
+            return 0;
 
-        var files = Directory.GetFiles(
-            folder,
-            "*.png",
-            SearchOption.AllDirectories
-        );
+        return AddEmojiFiles(Directory.GetFiles(folder, "*.png", SearchOption.AllDirectories));
+    }
 
+    private static int AddEmojiFiles(string[] files)
+    {
         if (files.Length == 0)
-            return;
+            return 0;
+
+        // keep load order stable between launches
+        Array.Sort(files, StringComparer.OrdinalIgnoreCase);
 
         var bytes = new byte[files.Length][];
         Parallel.For(0, files.Length, i => bytes[i] = File.ReadAllBytes(files[i]));
 
+        var added = 0;
         for (var i = 0; i < files.Length; i++)
         {
             var tex = new Texture2D(
@@ -83,7 +128,13 @@ public sealed class RichEmoji : BaseUnityPlugin
                 TextureFormat.RGBA32,
                 false
             );
-            LoadImageMethod.Invoke(null, [tex, bytes[i]]);
+
+            if (!(bool)LoadImageMethod.Invoke(null, [tex, bytes[i]]))
+            {
+                Log.LogWarning($"Couldn't load {files[i]}, skipping");
+                Destroy(tex);
+                continue;
+            }
 
             var fileName = Path.GetFileNameWithoutExtension(files[i]);
             var parts = fileName.Split(["__"], StringSplitOptions.None);
@@ -91,12 +142,18 @@ public sealed class RichEmoji : BaseUnityPlugin
             var unicode = parts.Length > 1 ? parts[1] : null;
 
             AddEmoji(tex, shortName, unicode);
+            added++;
         }
+
+        return added;
     }
 
     public static void AddEmoji(Texture2D source, string emojiName, string unicode = null)
     {
         var resized = ResizeTexture(source, EmojiMaxWidth, EmojiMaxHeight);
+        if (resized != source)
+            Destroy(source);
+
         PendingEmojis.Add((resized, emojiName, unicode));
     }
 
@@ -209,7 +266,7 @@ public sealed class RichEmoji : BaseUnityPlugin
                 var codepoints = unicodeSequence.Split('-');
                 var valid = true;
 
-                for (var cp = 0; i < codepoints.Length; i++)
+                for (var cp = 0; cp < codepoints.Length; cp++)
                     if (uint.TryParse(codepoints[cp], NumberStyles.HexNumber, null, out var parsed))
                     {
                         sequence.Append(char.ConvertFromUtf32((int)parsed));
@@ -228,6 +285,8 @@ public sealed class RichEmoji : BaseUnityPlugin
 
             CustomEmojiAsset.spriteCharacterTable.Add(character);
 
+            if (EmojiNameLookup.ContainsKey(emojiName))
+                Log.LogWarning($"Duplicate emoji :{emojiName}:, the one loaded last wins");
             EmojiNameLookup[emojiName] = fakeChar;
             EmojiFakeUnicodeLookup[fakeChar[0]] = $":{emojiName}:";
         }
@@ -236,7 +295,7 @@ public sealed class RichEmoji : BaseUnityPlugin
         defaultSprite.fallbackSpriteAssets ??= [];
         defaultSprite.fallbackSpriteAssets.Add(CustomEmojiAsset);
 
-        Log.LogInfo($"Loaded {PendingEmojis.Count} emojis.");
+        Log.LogInfo($"Built emoji atlas with {total} emojis ({atlas.width}x{atlas.height})");
 
         PendingEmojis.Clear();
     }

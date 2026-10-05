@@ -1,3 +1,5 @@
+# https://thunderstore.io/package/create/docs/
+
 param(
     [string]$Version,
     [string]$Author,
@@ -8,39 +10,23 @@ param(
     [string]$Dependencies = ""
 )
 
-$PackageDir = Join-Path $OutDir "package"
-$ZipPath = Join-Path $OutDir "$Title`_v$Version.zip"
+. "$PSScriptRoot\..\common.ps1"
 
-Remove-Item -Recurse -Force $PackageDir -ErrorAction SilentlyContinue
-Remove-Item -Force $ZipPath -ErrorAction SilentlyContinue
+$staging = New-StagingDir "Thunderstore"
 
-New-Item -ItemType Directory -Path $PackageDir | Out-Null
+Copy-PluginFiles $OutDir (Join-Path $staging "BepInEx\plugins")
 
-$PluginDir = Join-Path $PackageDir "BepInEx\plugins"
-New-Item -ItemType Directory -Path $PluginDir | Out-Null
-Copy-Item -Recurse "$OutDir\*" $PluginDir -Exclude "package"
+Copy-Item "$PSScriptRoot\..\icon.png" $staging
+Copy-Item "$PSScriptRoot\..\README.md" $staging
+Copy-Item "$PSScriptRoot\..\CHANGELOG.md" $staging
 
-Copy-Item "Package\Thunderstore\icon.png" $PackageDir
-Copy-Item "Package\Thunderstore\README.md" $PackageDir
-Copy-Item "Package\Thunderstore\CHANGELOG.md" $PackageDir
-
-$manifest = @{
+Write-Json "$staging\manifest.json" ([ordered]@{
     name = $Title
     version_number = $Version
     website_url = $ProjectUrl
     author = $Author
     description = $Description
-    dependencies = @(if ($Dependencies)
-    {
-        $Dependencies -split ','
-    }
-    else
-    {
-        @()
-    })
-} | ConvertTo-Json
+    dependencies = (Split-Dependencies $Dependencies)
+})
 
-[System.IO.File]::WriteAllText("$PackageDir\manifest.json", $manifest, [System.Text.Encoding]::UTF8)
-
-Compress-Archive -Path "$PackageDir\*" -DestinationPath $ZipPath
-Remove-Item -Recurse -Force $PackageDir
+Compress-Package $staging $OutDir "$Title`_Thunderstore_v$Version.zip"
